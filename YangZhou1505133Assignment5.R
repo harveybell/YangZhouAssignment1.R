@@ -1,5 +1,5 @@
 ###################################################################
-# title: Assignment 4 
+# title: Assignment 5
 # date: "Winter 2016"
 ###################################################################
 print("Yang Zhou")
@@ -44,7 +44,7 @@ ggplot(diamonds, aes(cut, price)) +
 #a#
 
 library(foreign)
-df<-read.dta("D://各种作业//winter//lab//org_example.dta")
+df<-read.dta("D://鍚勭浣滀笟//winter//lab//org_example.dta")
 library(dplyr)
 df <- df%>% 
   mutate(
