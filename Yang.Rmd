@@ -1,0 +1,110 @@
+---
+title: "YangZhou.1505133"
+output: html_document
+---
+
+
+```{r set up,warning=FALSE,echo=F,message=FALSE}
+library(ggplot2)
+library("dplyr")  
+library("RSQLite") 
+library("nycflights13") 
+
+my_db <- nycflights13_sqlite()
+
+
+f1<-left_join(
+  tbl(my_db, "flights"),
+  tbl(my_db, "weather"),
+  by = c("year","month","day","hour"))%>% 
+  collect() %>%
+  mutate(canceled = is.na(arr_time))
+
+f1$month<-as.factor(f1$month)
+```
+
+#(a)Weather
+###Regression
+```{r regression,warning=FALSE,echo=T,eval=F,message=FALSE}
+reg1<-lm(dep_delay~temp+dewp+humid+wind_dir+wind_speed++wind_gust+precip+pressure+visib,flights_weather1)
+summary(reg1)
+
+reg2<-lm(canceled~temp+dewp+humid+wind_dir+wind_speed++wind_gust+precip+pressure+visib,flights_weather1)
+summary(reg2)
+```
+dewpoints, preciptation and wind speed has significantly increased delay, while only dewpoints has significanlty increased the probability of being canceled.
+
+###Graph
+Graph of relationship between preciptation and delayed
+```{r graph,warning=FALSE,echo=T,message=FALSE}
+a<-ggplot(data = sample_n(f1, 10000),aes(x=precip,y=dep_delay))
+a+geom_point()+geom_line()
+```
+
+#(b)Time
+
+```{r,echo=F,warning = F,include=F}
+b1.reg<-lm(dep_delay~month+day+hour,f1)
+summary(b1.reg)
+b2.reg<-lm(canceled~month+day+hour,f1)
+summary(b2.reg)
+```
+
+```{r, warning=F,echo=F,fig.height = 3., fig.width=6}
+
+a.plot<-ggplot(data = sample_n(f1, 10000),aes(x=month,y=dep_delay))
+a.plot+geom_point()+geom_line()
+
+```
+
+This plot explains the relationship between departure delays and time.
+
+
+
+#(c)Airport Destination
+
+```{r,warning=FALSE,message=FALSE}
+
+dest_delay<-f1 %>%
+  filter(!is.na(arr_delay)) %>%
+  group_by(dest) %>%
+  summarize(
+    delay=mean(arr_delay),
+    n=n()
+  ) %>%
+  arrange(-delay) 
+```
+The destination that has highest average delay is CAE, TUL and OKC.
+
+
+#(d)characteristics 
+```{r,echo=F,warning = F,include=F}
+db <- nycflights13_sqlite()
+
+
+d<-left_join(
+  tbl(db, "flights"),
+  tbl(db, "planes"),
+  by = "tailnum")%>% 
+  collect() %>%
+  mutate(canceled = is.na(arr_time))
+```
+
+```{r,echo=F,warning = F,include=T}
+d1.reg<-lm(dep_delay~engines+seats+engine,d)
+d2.reg<-lm(canceled~engines+seats+engine,d)
+```
+
+```{r, warning=F,echo=F,fig.height = 3.5, fig.width=6}
+
+a.plot<-ggplot(data = sample_n(d, 10000),aes(x=seats,y=canceled))
+a.plot+geom_point()+geom_line()
+```
+
+number of seats and engines are statistically significant in determining cancelled flights. Other characteristics are not.
+
+
+
+
+
+
